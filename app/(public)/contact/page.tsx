@@ -1,6 +1,7 @@
 import { getSettings } from '@/lib/actions';
 import ContactForm from './ContactForm';
 import Image from 'next/image';
+import { readSetting } from '@/lib/site-settings';
 
 export const metadata = {
   title: 'Contact Us For Inquiry & Cooperation | Pilast',
@@ -9,6 +10,10 @@ export const metadata = {
 
 export default async function ContactPage({ searchParams }: { searchParams: Promise<{ product?: string, type?: string }> }) {
   const settings = await getSettings();
+  const phone = readSetting(settings.phone);
+  const whatsapp = readSetting(settings.whatsapp);
+  const email = readSetting(settings.email);
+  const address = readSetting(settings.address);
   const resolvedParams = await searchParams;
   const initialProduct = resolvedParams.product || '';
   const initialMessage = resolvedParams.type === 'bulk' ? 'I would like to get a bulk quote for this product.' : '';
@@ -49,27 +54,29 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
               <div className="space-y-6">
                 <div>
                   <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Phone</h4>
-                  <p className="mt-1 text-lg text-gray-900">{settings.phone || '+86 123 4567 8900'}</p>
+                  {phone && <p className="mt-1 text-lg text-gray-900">{phone}</p>}
                 </div>
                 
                 <div>
                   <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">WhatsApp</h4>
-                  <p className="mt-1 text-lg text-gray-900">{settings.whatsapp || '+86 123 4567 8900'}</p>
-                  <p className="text-sm text-orange-600 mt-1">24/7 Online for Quick Response</p>
+                  {whatsapp && <p className="mt-1 text-lg text-gray-900">{whatsapp}</p>}
+                  {whatsapp && <p className="text-sm text-orange-600 mt-1">24/7 Online for Quick Response</p>}
                 </div>
                 
                 <div>
                   <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Email</h4>
-                  <p className="mt-1 text-lg text-gray-900">
-                    <a href={`mailto:${settings.email || 'sales@pilates-exporter.com'}`} className="hover:text-orange-600">
-                      {settings.email || 'sales@pilates-exporter.com'}
-                    </a>
-                  </p>
+                  {email && (
+                    <p className="mt-1 text-lg text-gray-900">
+                      <a href={`mailto:${email}`} className="hover:text-orange-600">
+                        {email}
+                      </a>
+                    </p>
+                  )}
                 </div>
                 
                 <div>
                   <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Company Address</h4>
-                  <p className="mt-1 text-lg text-gray-900">{settings.address || '123 Fitness Equipment Park, Guangzhou, China'}</p>
+                  {address && <p className="mt-1 text-lg text-gray-900">{address}</p>}
                 </div>
               </div>
 

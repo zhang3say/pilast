@@ -2,9 +2,14 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { getSettings } from '@/lib/actions';
 import Logo from '@/components/Logo';
+import { readSetting } from '@/lib/site-settings';
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
   const settings = await getSettings();
+  const siteName = readSetting(settings.site_name);
+  const email = readSetting(settings.email);
+  const whatsapp = readSetting(settings.whatsapp);
+  const address = readSetting(settings.address);
 
   return (
     <>
@@ -16,7 +21,7 @@ export default async function PublicLayout({ children }: { children: React.React
                 {settings.site_logo ? (
                   <Image 
                     src={settings.site_logo} 
-                    alt={settings.site_name || 'Pilast'} 
+                    alt={siteName || 'Site Logo'} 
                     width={150} 
                     height={40} 
                     sizes="150px"
@@ -25,9 +30,11 @@ export default async function PublicLayout({ children }: { children: React.React
                 ) : (
                   <>
                     <Logo className="h-8 w-8 text-orange-600" />
-                    <span className="text-2xl font-bold text-orange-600 tracking-tight">
-                      {settings.site_name || 'Pilast'}
-                    </span>
+                    {siteName && (
+                      <span className="text-2xl font-bold text-orange-600 tracking-tight">
+                        {siteName}
+                      </span>
+                    )}
                   </>
                 )}
               </Link>
@@ -52,7 +59,7 @@ export default async function PublicLayout({ children }: { children: React.React
       <footer className="bg-gray-900 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
-            <h3 className="text-xl font-bold mb-4">{settings.site_name || 'Pilast'}</h3>
+            {siteName && <h3 className="text-xl font-bold mb-4">{siteName}</h3>}
             <p className="text-gray-400">Professional Pilates Equipment Exporter. Supplying high-quality commercial and home pilates machines globally.</p>
           </div>
           <div>
@@ -66,14 +73,14 @@ export default async function PublicLayout({ children }: { children: React.React
           <div>
             <h3 className="text-xl font-bold mb-4">Contact Info</h3>
             <ul className="space-y-2 text-gray-400">
-              <li>Email: {settings.email || 'sales@example.com'}</li>
-              <li>WhatsApp: {settings.whatsapp || '+86 123 4567 8900'}</li>
-              <li>Address: {settings.address || 'Guangzhou, China'}</li>
+              {email && <li>Email: {email}</li>}
+              {whatsapp && <li>WhatsApp: {whatsapp}</li>}
+              {address && <li>Address: {address}</li>}
             </ul>
           </div>
         </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 pt-8 border-t border-gray-800 text-center text-gray-400">
-          <p>&copy; {new Date().getFullYear()} {settings.site_name || 'Pilast'}. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()}{siteName ? ` ${siteName}` : ''}. All rights reserved.</p>
         </div>
       </footer>
     </>

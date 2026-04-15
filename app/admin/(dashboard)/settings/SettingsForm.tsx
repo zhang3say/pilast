@@ -41,7 +41,7 @@ export default function SettingsForm({ initialData }: { initialData: Record<stri
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">网站名称 (Site Name)</label>
-        <input type="text" name="site_name" defaultValue={initialData.site_name || 'Pilast'} className="w-full px-4 py-2 border border-gray-300 rounded-md" />
+        <input type="text" name="site_name" defaultValue={initialData.site_name} className="w-full px-4 py-2 border border-gray-300 rounded-md" />
       </div>
 
       <div>
@@ -92,7 +92,7 @@ export default function SettingsForm({ initialData }: { initialData: Record<stri
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">全局 SEO 标题后缀 (Title Suffix)</label>
-            <input type="text" name="seo_title_suffix" placeholder=" | Pilast - Professional Pilates Equipment" defaultValue={initialData.seo_title_suffix || ' | Pilast'} className="w-full px-4 py-2 border border-gray-300 rounded-md" />
+            <input type="text" name="seo_title_suffix" placeholder=" | Pilast - Professional Pilates Equipment" defaultValue={initialData.seo_title_suffix} className="w-full px-4 py-2 border border-gray-300 rounded-md" />
           </div>
 
           <div>

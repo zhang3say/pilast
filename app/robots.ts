@@ -1,9 +1,10 @@
 import { MetadataRoute } from 'next';
 import { getSettings } from '@/lib/actions';
+import { buildSiteUrl, readSetting } from '@/lib/site-settings';
 
 export default async function robots(): Promise<MetadataRoute.Robots> {
   const settings = await getSettings();
-  const baseUrl = settings.seo_base_url || 'https://www.pilast.com';
+  const baseUrl = readSetting(settings.seo_base_url);
 
   return {
     rules: {
@@ -11,6 +12,6 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
       allow: '/',
       disallow: ['/admin/', '/api/'],
     },
-    sitemap: `${baseUrl}/sitemap.xml`,
+    sitemap: buildSiteUrl(baseUrl, '/sitemap.xml'),
   };
 }

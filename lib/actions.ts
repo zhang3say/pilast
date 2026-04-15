@@ -1,7 +1,7 @@
 'use server';
 
 import db from './db';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, unstable_noStore as noStore } from 'next/cache';
 import { writeFile, mkdir } from 'fs/promises';
 import { join, basename } from 'path';
 import { existsSync } from 'fs';
@@ -160,6 +160,7 @@ export async function getInquiries() {
 }
 
 export async function getSettings() {
+  noStore();
   const stmt = db.prepare('SELECT * FROM settings');
   const rows = await stmt.all() as { key: string; value: string }[];
   const settings: Record<string, string> = {};

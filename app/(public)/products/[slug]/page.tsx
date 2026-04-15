@@ -4,6 +4,7 @@ import { getProductBySlug, getSettings } from '@/lib/actions';
 import { notFound } from 'next/navigation';
 import ProductImageGallery from './ProductImageGallery';
 import type { Metadata } from 'next';
+import { buildSiteUrl, readSetting } from '@/lib/site-settings';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata | null> {
   const { slug } = await params;
@@ -11,10 +12,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!product) return null;
 
   const settings = await getSettings();
-  const baseUrl = settings.seo_base_url || 'https://www.pilast.com';
-  const siteName = settings.site_name || 'Pilast';
+  const baseUrl = readSetting(settings.seo_base_url);
+  const siteName = readSetting(settings.site_name);
   const images = product.images ? JSON.parse(product.images) : [product.image_url];
-  const ogImage = images.length > 0 ? `${baseUrl}${images[0]}` : undefined;
+  const ogImage = images.length > 0 ? images
+    .map((img: string) => buildSiteUrl(baseUrl, img))
+    .find(Boolean) : undefined;
 
   const title = product.name;
   const description = product.seo_description || product.overview;
@@ -27,7 +30,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     openGraph: {
       title,
       description,
-      url: `${baseUrl}/products/${product.slug}`,
+      url: buildSiteUrl(baseUrl, `/products/${product.slug}`),
       siteName,
       images: ogImage ? [{ url: ogImage, width: 800, height: 800, alt: product.name }] : undefined,
       type: 'article',
@@ -53,8 +56,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   }
 
   const settings = await getSettings();
-  const baseUrl = settings.seo_base_url || 'https://www.pilast.com';
-  const siteName = settings.site_name || 'Pilast';
+  const baseUrl = readSetting(settings.seo_base_url);
+  const siteName = readSetting(settings.site_name);
   const images = product.images ? JSON.parse(product.images) : [product.image_url];
   const description = product.seo_description || product.overview;
 
@@ -62,19 +65,21 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: product.name,
-    image: images.length > 0 ? images.map((img: string) => `${baseUrl}${img}`) : undefined,
+    image: images.length > 0 ? images
+      .map((img: string) => buildSiteUrl(baseUrl, img))
+      .filter(Boolean) : undefined,
     description: description,
     category: product.category,
-    brand: {
+    brand: siteName ? {
       '@type': 'Brand',
       name: siteName,
-    },
+    } : undefined,
     offers: {
       '@type': 'Offer',
       availability: 'https://schema.org/InStock',
       price: '0',
       priceCurrency: 'USD',
-      url: `${baseUrl}/products/${product.slug}`,
+      url: buildSiteUrl(baseUrl, `/products/${product.slug}`),
     },
   };
 

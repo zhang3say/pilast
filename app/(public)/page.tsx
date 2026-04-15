@@ -1,26 +1,31 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { getHotProducts, getSettings } from '@/lib/actions';
+import { buildAssetUrl, buildSiteUrl, readSetting } from '@/lib/site-settings';
 
 export default async function Home() {
   const hotProducts = await getHotProducts();
   const settings = await getSettings();
 
-  const baseUrl = settings.seo_base_url || 'https://www.pilast.com';
-  const logoUrl = settings.site_logo ? `${baseUrl}${settings.site_logo}` : `${baseUrl}/logo.png`;
+  const siteName = readSetting(settings.site_name);
+  const baseUrl = readSetting(settings.seo_base_url);
+  const logoUrl = buildAssetUrl(baseUrl, settings.site_logo);
+  const siteUrl = buildSiteUrl(baseUrl, '/');
+  const phone = readSetting(settings.phone);
+  const email = readSetting(settings.email);
 
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: settings.site_name || 'Pilast',
-    url: baseUrl,
+    name: siteName,
+    url: siteUrl,
     logo: logoUrl,
-    contactPoint: {
+    contactPoint: phone || email ? {
       '@type': 'ContactPoint',
-      telephone: settings.phone,
+      telephone: phone,
       contactType: 'sales',
-      email: settings.email,
-    },
+      email,
+    } : undefined,
   };
 
   return (
