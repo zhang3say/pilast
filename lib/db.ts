@@ -1,135 +1,137 @@
-import Database from 'better-sqlite3';
-import path from 'path';
-import fs from 'fs';
+import mysql from 'mysql2/promise';
 
-// Ensure the data directory exists
-const dataDir = path.join(process.cwd(), 'data');
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
-}
+const pool = mysql.createPool({
+  host: process.env.MYSQL_HOST || '127.0.0.1',
+  user: process.env.MYSQL_USER || 'pilastuser',
+  password: process.env.MYSQL_PASSWORD || 'pilastpassword',
+  database: process.env.MYSQL_DATABASE || 'pilast',
+  port: process.env.MYSQL_PORT ? parseInt(process.env.MYSQL_PORT, 10) : 3306,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+});
 
-const dbPath = path.join(dataDir, 'pilates.db');
+console.log('✅ Connected to MySQL via pool');
 
-// Initialize database
-const db = new Database(dbPath, { verbose: console.log });
+// Adapter to perfectly mimic better-sqlite3 standard queries asynchronously
+const db = {
+  exec: async (sql: string) => {
+    const statements = sql.split(';').filter((s: string) => s.trim().length > 0);
+    for (const s of statements) {
+      await pool.query(s);
+    }
+  },
+  prepare: (sql: string) => {
+    return {
+      run: async (...params: any[]) => {
+        const [result] = await pool.query(sql, params) as any;
+        return { lastInsertRowid: result.insertId, changes: result.affectedRows };
+      },
+      get: async (...params: any[]) => {
+        const [rows] = await pool.query(sql, params) as any[];
+        return Array.isArray(rows) ? rows[0] : undefined; 
+      },
+      all: async (...params: any[]) => {
+        const [rows] = await pool.query(sql, params) as any[];
+        return Array.isArray(rows) ? rows : [];
+      }
+    };
+  }
+};
 
-// Create tables if they don't exist
-db.exec(`
-  CREATE TABLE IF NOT EXISTS products (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    slug TEXT UNIQUE NOT NULL,
-    category TEXT NOT NULL,
-    overview TEXT,
-    features TEXT,
-    parameters TEXT,
-    image_url TEXT,
-    images TEXT DEFAULT '[]',
-    details_html TEXT,
-    seo_keywords TEXT,
-    seo_description TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-
-  CREATE TABLE IF NOT EXISTS media (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    filename TEXT NOT NULL,
-    url TEXT NOT NULL,
-    type TEXT,
-    size INTEGER,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-
-  CREATE TABLE IF NOT EXISTS inquiries (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    company TEXT,
-    email TEXT NOT NULL,
-    country TEXT,
-    product_interested TEXT,
-    quantity TEXT,
-    message TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-
-  CREATE TABLE IF NOT EXISTS settings (
-    key TEXT PRIMARY KEY,
-    value TEXT
-  );
-
-  CREATE TABLE IF NOT EXISTS categories (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT UNIQUE NOT NULL,
-    remarks TEXT
-  );
-`);
-
-// Seed initial categories if empty
-const countCategories = db.prepare('SELECT COUNT(*) as count FROM categories').get() as { count: number };
-if (countCategories.count === 0) {
-  // Try to get categories from existing products if any
-  const existingProductCategories = db.prepare('SELECT DISTINCT category FROM products').all() as { category: string }[];
-  const insertCategory = db.prepare('INSERT INTO categories (name) VALUES (?)');
+export async function initializeDb() {
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS products (
+      id INTEGER PRIMARY KEY AUTO_INCREMENT,
+      name TEXT NOT NULL,
+      slug VARCHAR(255) UNIQUE NOT NULL,
+      category TEXT NOT NULL,
+      overview TEXT,
+      features TEXT,
+      parameters TEXT,
+      image_url TEXT,
+      images TEXT,
+      details_html TEXT,
+      seo_keywords TEXT,
+      seo_description TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE TABLE IF NOT EXISTS media (
+      id INTEGER PRIMARY KEY AUTO_INCREMENT,
+      filename VARCHAR(255) NOT NULL,
+      url VARCHAR(500) NOT NULL,
+      type VARCHAR(100),
+      size INTEGER,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE TABLE IF NOT EXISTS inquiries (
+      id INTEGER PRIMARY KEY AUTO_INCREMENT,
+      name VARCHAR(255) NOT NULL,
+      company VARCHAR(255),
+      email VARCHAR(255) NOT NULL,
+      country VARCHAR(255),
+      product_interested VARCHAR(255),
+      quantity VARCHAR(100),
+      message TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE TABLE IF NOT EXISTS settings (
+      \`key\` VARCHAR(255) PRIMARY KEY,
+      value TEXT
+    );
+    CREATE TABLE IF NOT EXISTS categories (
+      id INTEGER PRIMARY KEY AUTO_INCREMENT,
+      name VARCHAR(255) UNIQUE NOT NULL,
+      remarks TEXT
+    );
+  `);
   
-  if (existingProductCategories.length > 0) {
-    existingProductCategories.forEach(row => {
-      try { insertCategory.run(row.category); } catch (e) {}
-    });
-  } else {
-    // Default categories if nothing exists
-    ['Pilates Reformers', 'Cadillac Pilates Beds', 'Pilates Chairs', 'Ladder Barrels'].forEach(name => {
-      insertCategory.run(name);
-    });
+  // Try counting existing Settings
+  const countSettingsList = await db.prepare('SELECT COUNT(*) as count FROM settings').all();
+  if (countSettingsList[0].count === 0) {
+    const insertSetting = db.prepare('INSERT INTO settings (\`key\`, value) VALUES (?, ?)');
+    await insertSetting.run('phone', '+86 123 4567 8900');
+    await insertSetting.run('whatsapp', '+86 123 4567 8900');
+    await insertSetting.run('email', 'sales@pilates-exporter.com');
+    await insertSetting.run('address', '123 Fitness Equipment Park, Guangzhou, China');
+  }
+
+  // Categories
+  const countCatList = await db.prepare('SELECT COUNT(*) as count FROM categories').all();
+  if (countCatList[0].count === 0) {
+    const insertCategory = db.prepare('INSERT INTO categories (name) VALUES (?)');
+    for (const name of ['Pilates Reformers', 'Cadillac Pilates Beds', 'Pilates Chairs', 'Ladder Barrels']) {
+      await insertCategory.run(name);
+    }
+  }
+
+  // Initial Product Demo
+  const countProdList = await db.prepare('SELECT COUNT(*) as count FROM products').all();
+  if (countProdList[0].count === 0) {
+    const insertProduct = db.prepare(`
+      INSERT INTO products (name, slug, category, overview, features, parameters, image_url, images, details_html, seo_keywords, seo_description)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    await insertProduct.run(
+      'Commercial Pilates Reformer Machine',
+      'commercial-pilates-reformer',
+      'Pilates Reformers',
+      'High-quality commercial.',
+      '1. Sturdy frame',
+      'Model No.: PR-100',
+      'https://picsum.photos/seed/reformer1/800/600',
+      '[]',
+      '',
+      '',
+      ''
+    );
   }
 }
 
-// Seed initial settings if empty
-const countSettings = db.prepare('SELECT COUNT(*) as count FROM settings').get() as { count: number };
-if (countSettings.count === 0) {
-  const insertSetting = db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)');
-  insertSetting.run('phone', '+86 123 4567 8900');
-  insertSetting.run('whatsapp', '+86 123 4567 8900');
-  insertSetting.run('email', 'sales@pilates-exporter.com');
-  insertSetting.run('address', '123 Fitness Equipment Park, Guangzhou, China');
-}
-
-// Seed initial products if empty
-const countProducts = db.prepare('SELECT COUNT(*) as count FROM products').get() as { count: number };
-if (countProducts.count === 0) {
-  const insertProduct = db.prepare(`
-    INSERT INTO products (name, slug, category, overview, features, parameters, image_url)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-  `);
-  
-  insertProduct.run(
-    'Commercial Pilates Reformer Machine',
-    'commercial-pilates-reformer',
-    'Pilates Reformers',
-    'High-quality commercial pilates reformer designed for professional fitness studios and rehabilitation centers. Made of thickened steel frame, wear-resistant PU leather, high-elastic springs, providing smooth and comfortable training experience. Suitable for full-body training, core strengthening, rehabilitation exercise and private coaching.',
-    '1. Sturdy and durable frame, strong load-bearing capacity, long service life.\n2. Ergonomic design, comfortable padding, reduce body pressure during training.\n3. Adjustable spring tension, suitable for trainers of different levels.\n4. Smooth sliding carriage, quiet and stable operation.\n5. Easy to install and maintain, suitable for long-term commercial use.\n6. Customizable color and logo to meet brand needs.',
-    'Model No.: PR-100\nMaterial: Wooden Frame, High-Density Sponge, PU Leather, Stainless Steel Springs\nProduct Size: 240 × 70 × 35 cm\nNet Weight: 85 kg\nLoad Capacity: 150 kg\nSpring Tension: Adjustable (5 Springs)\nColor Options: Black, Grey, Beige, Custom\nMOQ: 1 Set\nLead Time: Sample (3-7 Days), Bulk Order (15-30 Days)\nCertifications: CE, ISO9001',
-    'https://picsum.photos/seed/reformer1/800/600'
-  );
-
-  insertProduct.run(
-    'Full-Size Cadillac Bed',
-    'full-size-cadillac-bed',
-    'Cadillac Pilates Beds',
-    'Ideal for high-end pilates studios and rehabilitation centers, supports multi-directional training, spine correction and full-body conditioning. Durable materials, ergonomic design.',
-    '1. Stainless steel tower frame, rust-proof and durable.\n2. Multiple attachment points for springs and straps.\n3. High-density EVA foam padding.\n4. Includes push-through bar, roll-down bar, and trapeze.',
-    'Model No.: CB-200\nMaterial: Stainless Steel, Maple Wood, PU Leather\nProduct Size: 220 × 80 × 210 cm\nNet Weight: 120 kg\nLoad Capacity: 200 kg\nColor Options: Custom\nMOQ: 1 Set',
-    'https://picsum.photos/seed/cadillac1/800/600'
-  );
-
-  insertProduct.run(
-    'Stability Chair',
-    'stability-chair',
-    'Pilates Chairs',
-    'Compact and versatile, perfect for small-space studios and home use, targets core strength, balance and muscle shaping. Easy to operate, space-saving.',
-    '1. Split pedal design for unilateral or bilateral exercises.\n2. Adjustable spring resistance.\n3. Compact footprint.\n4. Sturdy wooden construction.',
-    'Model No.: SC-300\nMaterial: Maple Wood, Steel Springs, PU Leather\nProduct Size: 80 × 60 × 65 cm\nNet Weight: 35 kg\nLoad Capacity: 120 kg\nColor Options: Custom\nMOQ: 1 Set',
-    'https://picsum.photos/seed/chair1/800/600'
-  );
+// Call dynamically, but avoid multiple triggers
+let initPromise: Promise<void> | null = null;
+if (!initPromise) {
+  initPromise = initializeDb().catch(console.error);
 }
 
 export default db;

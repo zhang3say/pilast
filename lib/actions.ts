@@ -8,17 +8,17 @@ import { existsSync } from 'fs';
 
 export async function getProducts() {
   const stmt = db.prepare('SELECT * FROM products ORDER BY created_at DESC');
-  return stmt.all() as any[];
+  return await stmt.all() as any[];
 }
 
 export async function getProductBySlug(slug: string) {
   const stmt = db.prepare('SELECT * FROM products WHERE slug = ?');
-  return stmt.get(slug) as any;
+  return await stmt.get(slug) as any;
 }
 
 export async function getProductById(id: number) {
   const stmt = db.prepare('SELECT * FROM products WHERE id = ?');
-  return stmt.get(id) as any;
+  return await stmt.get(id) as any;
 }
 
 export async function createProduct(data: any) {
@@ -26,7 +26,7 @@ export async function createProduct(data: any) {
     INSERT INTO products (name, slug, category, overview, features, parameters, image_url, images, details_html, seo_keywords, seo_description)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
-  const info = stmt.run(
+  const info = await stmt.run(
     data.name,
     data.slug,
     data.category,
@@ -50,7 +50,7 @@ export async function updateProduct(id: number, data: any) {
     SET name = ?, slug = ?, category = ?, overview = ?, features = ?, parameters = ?, image_url = ?, images = ?, details_html = ?, seo_keywords = ?, seo_description = ?
     WHERE id = ?
   `);
-  stmt.run(
+  await stmt.run(
     data.name,
     data.slug,
     data.category,
@@ -71,7 +71,7 @@ export async function updateProduct(id: number, data: any) {
 
 export async function getMedia() {
   const stmt = db.prepare('SELECT * FROM media ORDER BY created_at DESC');
-  return stmt.all() as any[];
+  return await stmt.all() as any[];
 }
 
 export async function uploadMedia(formData: FormData) {
@@ -92,7 +92,7 @@ export async function uploadMedia(formData: FormData) {
 
   const url = `/uploads/${filename}`;
   const stmt = db.prepare('INSERT INTO media (filename, url, type, size) VALUES (?, ?, ?, ?)');
-  stmt.run(filename, url, file.type, file.size);
+  await stmt.run(filename, url, file.type, file.size);
 
   revalidatePath('/admin/media');
   return { success: true, url };
@@ -101,7 +101,7 @@ export async function uploadMedia(formData: FormData) {
 export async function deleteMedia(id: number, url: string) {
   // Delete from DB
   const stmt = db.prepare('DELETE FROM media WHERE id = ?');
-  stmt.run(id);
+  await stmt.run(id);
 
   // Delete from FS
   try {
@@ -119,7 +119,7 @@ export async function deleteMedia(id: number, url: string) {
 
 export async function deleteProduct(id: number) {
   const stmt = db.prepare('DELETE FROM products WHERE id = ?');
-  stmt.run(id);
+  await stmt.run(id);
   revalidatePath('/admin/products');
   revalidatePath('/products');
 }
@@ -129,7 +129,7 @@ export async function submitInquiry(data: any) {
     INSERT INTO inquiries (name, company, email, country, product_interested, quantity, message)
     VALUES (?, ?, ?, ?, ?, ?, ?)
   `);
-  stmt.run(
+  await stmt.run(
     data.name,
     data.company || '',
     data.email,
@@ -143,12 +143,12 @@ export async function submitInquiry(data: any) {
 
 export async function getInquiries() {
   const stmt = db.prepare('SELECT * FROM inquiries ORDER BY created_at DESC');
-  return stmt.all() as any[];
+  return await stmt.all() as any[];
 }
 
 export async function getSettings() {
   const stmt = db.prepare('SELECT * FROM settings');
-  const rows = stmt.all() as { key: string; value: string }[];
+  const rows = await stmt.all() as { key: string; value: string }[];
   const settings: Record<string, string> = {};
   rows.forEach(row => {
     settings[row.key] = row.value;
@@ -157,14 +157,12 @@ export async function getSettings() {
 }
 
 export async function updateSettings(data: Record<string, string>) {
-  const stmt = db.prepare('UPDATE settings SET value = ? WHERE key = ?');
-  const insertStmt = db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)');
+  const stmt = db.prepare('UPDATE settings SET value = ? WHERE `key` = ?');
+  const insertStmt = db.prepare('REPLACE INTO settings (`key`, value) VALUES (?, ?)');
   
-  db.transaction(() => {
-    for (const [key, value] of Object.entries(data)) {
-      insertStmt.run(key, value);
-    }
-  })();
+  for (const [key, value] of Object.entries(data)) {
+    await insertStmt.run(key, value);
+  }
   
   revalidatePath('/admin/settings');
   revalidatePath('/', 'layout');
@@ -197,15 +195,13 @@ export async function updateSettingsWithLogo(formData: FormData) {
     data.site_logo = `/uploads/${filename}`;
   }
 
-  const insertStmt = db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)');
+  const insertStmt = db.prepare('REPLACE INTO settings (`key`, value) VALUES (?, ?)');
   
-  db.transaction(() => {
-    for (const [key, value] of Object.entries(data)) {
-      if (value !== undefined && value !== null) {
-        insertStmt.run(key, value);
-      }
+  for (const [key, value] of Object.entries(data)) {
+    if (value !== undefined && value !== null) {
+      await insertStmt.run(key, value);
     }
-  })();
+  }
   
   revalidatePath('/admin/settings');
   revalidatePath('/', 'layout');
@@ -213,19 +209,19 @@ export async function updateSettingsWithLogo(formData: FormData) {
 
 export async function getCategories() {
   const stmt = db.prepare('SELECT name FROM categories ORDER BY name ASC');
-  const rows = stmt.all() as { name: string }[];
+  const rows = await stmt.all() as { name: string }[];
   return rows.map(r => r.name);
 }
 
 export async function getAllCategories() {
   const stmt = db.prepare('SELECT * FROM categories ORDER BY name ASC');
-  return stmt.all() as { id: number; name: string }[];
+  return await stmt.all() as { id: number; name: string }[];
 }
 
 export async function createCategory(name: string, remarks: string = '') {
   const stmt = db.prepare('INSERT INTO categories (name, remarks) VALUES (?, ?)');
   try {
-    stmt.run(name, remarks);
+    await stmt.run(name, remarks);
     revalidatePath('/admin/categories');
     revalidatePath('/products');
     return { success: true };
@@ -236,7 +232,7 @@ export async function createCategory(name: string, remarks: string = '') {
 
 export async function deleteCategory(id: number) {
   const stmt = db.prepare('DELETE FROM categories WHERE id = ?');
-  stmt.run(id);
+  await stmt.run(id);
   revalidatePath('/admin/categories');
   revalidatePath('/products');
 }
@@ -244,7 +240,7 @@ export async function deleteCategory(id: number) {
 export async function updateCategory(id: number, name: string, remarks: string = '') {
   const stmt = db.prepare('UPDATE categories SET name = ?, remarks = ? WHERE id = ?');
   try {
-    stmt.run(name, remarks, id);
+    await stmt.run(name, remarks, id);
     revalidatePath('/admin/categories');
     revalidatePath('/products');
     return { success: true };
@@ -255,7 +251,7 @@ export async function updateCategory(id: number, name: string, remarks: string =
 
 export async function getCategoryById(id: number) {
   const stmt = db.prepare('SELECT * FROM categories WHERE id = ?');
-  return stmt.get(id) as { id: number; name: string; remarks: string };
+  return await stmt.get(id) as { id: number; name: string; remarks: string };
 }
 
 export async function getPaginatedProducts({
@@ -288,8 +284,9 @@ export async function getPaginatedProducts({
 
   queryStr += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
   
-  const products = db.prepare(queryStr).all(...params, limit, offset) as any[];
-  const { total } = db.prepare(countQueryStr).get(...params) as { total: number };
+  const products = await db.prepare(queryStr).all(...params, limit, offset) as any[];
+  const countResult = await db.prepare(countQueryStr).get(...params) as { total: number } | undefined;
+  const total = countResult?.total || 0;
   
   return {
     products,
