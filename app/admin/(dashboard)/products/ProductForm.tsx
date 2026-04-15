@@ -31,9 +31,11 @@ export default function ProductForm({ initialData, categories = [] }: { initialD
         overview: formData.get('overview'),
         features: formData.get('features'),
         parameters: formData.get('parameters'),
-        image_url: selectedImages[0] || '', // Maintain compatibility
+        image_url: selectedImages[0] || '',
         images: JSON.stringify(selectedImages),
         details_html: detailsHtml,
+        seo_keywords: formData.get('seo_keywords'),
+        seo_description: formData.get('seo_description'),
       };
 
       if (initialData) {
@@ -44,7 +46,7 @@ export default function ProductForm({ initialData, categories = [] }: { initialD
       router.push('/admin/products');
     } catch (error) {
       console.error(error);
-      alert('保存失败，请检查Slug是否重复。');
+      alert('保存失败，请检查输入内容或 Slug 是否已被其他产品使用。');
     } finally {
       setIsSubmitting(false);
     }
@@ -106,6 +108,40 @@ export default function ProductForm({ initialData, categories = [] }: { initialD
               <label className="block text-sm font-medium text-gray-700 mb-1">产品参数 (Parameters) - 格式: &quot;属性: 值&quot;, 每行一个</label>
               <textarea name="parameters" rows={8} defaultValue={initialData?.parameters} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"></textarea>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* SEO Settings */}
+      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 mb-8 font-sans">
+        <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          高级 SEO 优化 (SEO & Search)
+        </h2>
+        <p className="text-sm text-gray-500 mb-4">自定义此产品的 SEO 关键词和描述片断，有助于提高 Google 在该独立品类上的收录率。如留空，将自动使用网站全局默认配置。</p>
+        
+        <div className="space-y-6">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">SEO 专属关键词 (Meta Keywords)</label>
+            <input 
+              type="text" 
+              name="seo_keywords" 
+              defaultValue={initialData?.seo_keywords || ''}
+              placeholder="例如: Foldable Pilates Reformer, Aluminum Pilates Bed"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition" 
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">SEO 搜索短描 (Meta Description)</label>
+            <textarea 
+              name="seo_description" 
+              rows={3} 
+              defaultValue={initialData?.seo_description || ''}
+              placeholder="建议用150字概况提炼这个产品的核心卖点（如用什么材质，什么认证），显示在Google搜索结果下方。"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition line-clamp-3"
+            ></textarea>
           </div>
         </div>
       </div>

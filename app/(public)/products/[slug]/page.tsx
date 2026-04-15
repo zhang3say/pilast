@@ -1,16 +1,46 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { getProductBySlug } from '@/lib/actions';
+import { getProductBySlug, getSettings } from '@/lib/actions';
 import { notFound } from 'next/navigation';
 import ProductImageGallery from './ProductImageGallery';
+import type { Metadata } from 'next';
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata | null> {
   const { slug } = await params;
   const product = await getProductBySlug(slug);
-  if (!product) return { title: 'Product Not Found' };
+  if (!product) return null;
+
+  const settings = await getSettings();
+  const baseUrl = settings.seo_base_url || 'https://www.pilast.com';
+  const siteName = settings.site_name || 'Pilast';
+  const images = product.images ? JSON.parse(product.images) : [product.image_url];
+  const ogImage = images.length > 0 ? `${baseUrl}${images[0]}` : undefined;
+
+  const title = product.name;
+  const description = product.seo_description || product.overview;
+  const keywords = product.seo_keywords || `${product.category}, ${product.name}, Pilates Equipment`;
+
   return {
-    title: `${product.name} | Pilast`,
-    description: product.overview,
+    title,
+    description,
+    keywords,
+    openGraph: {
+      title,
+      description,
+      url: `${baseUrl}/products/${product.slug}`,
+      siteName,
+      images: ogImage ? [{ url: ogImage, width: 800, height: 800, alt: product.name }] : undefined,
+      type: 'article',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: ogImage ? [ogImage] : undefined,
+    },
+    alternates: {
+      canonical: `/products/${product.slug}`,
+    },
   };
 }
 
@@ -24,8 +54,32 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
   const images = product.images ? JSON.parse(product.images) : [product.image_url];
 
+  const productJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    image: images.length > 0 ? images.map((img: string) => `${baseUrl}${img}`) : undefined,
+    description: description,
+    category: product.category,
+    brand: {
+      '@type': 'Brand',
+      name: siteName,
+    },
+    offers: {
+      '@type': 'Offer',
+      availability: 'https://schema.org/InStock',
+      price: '0',
+      priceCurrency: 'USD',
+      url: `${baseUrl}/products/${product.slug}`,
+    },
+  };
+
   return (
     <div className="bg-white min-h-screen py-12">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+      />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8 font-sans">
           <Link href="/products" className="text-orange-600 hover:text-orange-700 font-medium transition flex items-center gap-1">

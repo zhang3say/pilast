@@ -23,8 +23,8 @@ export async function getProductById(id: number) {
 
 export async function createProduct(data: any) {
   const stmt = db.prepare(`
-    INSERT INTO products (name, slug, category, overview, features, parameters, image_url, images, details_html)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO products (name, slug, category, overview, features, parameters, image_url, images, details_html, seo_keywords, seo_description)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
   const info = stmt.run(
     data.name,
@@ -35,7 +35,9 @@ export async function createProduct(data: any) {
     data.parameters,
     data.image_url || '',
     data.images || '[]',
-    data.details_html || ''
+    data.details_html || '',
+    data.seo_keywords || '',
+    data.seo_description || ''
   );
   revalidatePath('/admin/products');
   revalidatePath('/products');
@@ -45,7 +47,7 @@ export async function createProduct(data: any) {
 export async function updateProduct(id: number, data: any) {
   const stmt = db.prepare(`
     UPDATE products
-    SET name = ?, slug = ?, category = ?, overview = ?, features = ?, parameters = ?, image_url = ?, images = ?, details_html = ?
+    SET name = ?, slug = ?, category = ?, overview = ?, features = ?, parameters = ?, image_url = ?, images = ?, details_html = ?, seo_keywords = ?, seo_description = ?
     WHERE id = ?
   `);
   stmt.run(
@@ -58,6 +60,8 @@ export async function updateProduct(id: number, data: any) {
     data.image_url || '',
     data.images || '[]',
     data.details_html || '',
+    data.seo_keywords || '',
+    data.seo_description || '',
     id
   );
   revalidatePath('/admin/products');

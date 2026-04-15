@@ -1,13 +1,35 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { getProducts } from '@/lib/actions';
+import { getProducts, getSettings } from '@/lib/actions';
 
 export default async function Home() {
   const products = await getProducts();
+  const settings = await getSettings();
   const hotProducts = products.slice(0, 4);
+
+  const baseUrl = settings.seo_base_url || 'https://www.pilast.com';
+  const logoUrl = settings.site_logo ? `${baseUrl}${settings.site_logo}` : `${baseUrl}/logo.png`;
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: settings.site_name || 'Pilast',
+    url: baseUrl,
+    logo: logoUrl,
+    contactPoint: {
+      '@type': 'ContactPoint',
+      telephone: settings.phone,
+      contactType: 'sales',
+      email: settings.email,
+    },
+  };
 
   return (
     <div>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Hero Banner */}
       <section className="relative h-[600px] flex items-center justify-center text-center">
         <div className="absolute inset-0 z-0">

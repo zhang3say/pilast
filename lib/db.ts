@@ -26,6 +26,8 @@ db.exec(`
     image_url TEXT,
     images TEXT DEFAULT '[]',
     details_html TEXT,
+    seo_keywords TEXT,
+    seo_description TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 

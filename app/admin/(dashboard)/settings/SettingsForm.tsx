@@ -81,6 +81,32 @@ export default function SettingsForm({ initialData }: { initialData: Record<stri
         <textarea name="address" rows={3} defaultValue={initialData.address} className="w-full px-4 py-2 border border-gray-300 rounded-md"></textarea>
       </div>
 
+      <div className="pt-6 border-t border-gray-200">
+        <h3 className="text-xl font-bold text-gray-900 mb-4">SEO 优化设置 (SEO Settings)</h3>
+        
+        <div className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">站点生产域名 Base URL <span className="text-gray-400 text-xs">(用于 Canonical 及 Sitemap，结尾不带斜杠)</span></label>
+            <input type="url" name="seo_base_url" placeholder="https://www.pilast.com" defaultValue={initialData.seo_base_url} className="w-full px-4 py-2 border border-gray-300 rounded-md text-sm font-mono" />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">全局 SEO 标题后缀 (Title Suffix)</label>
+            <input type="text" name="seo_title_suffix" placeholder=" | Pilast - Professional Pilates Equipment" defaultValue={initialData.seo_title_suffix || ' | Pilast'} className="w-full px-4 py-2 border border-gray-300 rounded-md" />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">全局 SEO 关键词 (Default Meta Keywords) <span className="text-gray-400 text-xs">(用英文逗号分隔)</span></label>
+            <input type="text" name="seo_keywords" placeholder="Commercial Pilates Reformer, Wholesale Pilates Equipment, Home Pilates Machines" defaultValue={initialData.seo_keywords} className="w-full px-4 py-2 border border-gray-300 rounded-md" />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">全局 SEO 描述 (Default Meta Description)</label>
+            <textarea name="seo_description" rows={3} placeholder="Full Range of Commercial & Home Pilates Machines | Factory Direct | CE Certified | On-Time Delivery" defaultValue={initialData.seo_description} className="w-full px-4 py-2 border border-gray-300 rounded-md"></textarea>
+          </div>
+        </div>
+      </div>
+
       <div>
         <button type="submit" disabled={isSubmitting} className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50">
           {isSubmitting ? '保存中...' : '保存设置'}
