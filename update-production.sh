@@ -31,6 +31,22 @@ sync_standalone_assets() {
   rsync -a --delete .next/static/ .next/standalone/.next/static/
 }
 
+ensure_pm2_uses_standalone() {
+  local current_script
+  current_script="$(pm2 jlist | node -e "
+    const fs = require('fs');
+    const appName = process.argv[1];
+    const data = JSON.parse(fs.readFileSync(0, 'utf8'));
+    const app = data.find((item) => item.name === appName);
+    if (app?.pm2_env?.pm_exec_path) process.stdout.write(app.pm2_env.pm_exec_path);
+  " "$APP_NAME")"
+
+  if [[ -n "$current_script" && "$current_script" != "$ROOT_DIR/.next/standalone/server.js" ]]; then
+    log "Replacing legacy PM2 process ($current_script) with standalone server"
+    pm2 delete "$APP_NAME"
+  fi
+}
+
 main() {
   require_command git
   require_command pnpm
@@ -57,6 +73,7 @@ main() {
   sync_standalone_assets
 
   log "Reloading PM2 process"
+  ensure_pm2_uses_standalone
   pm2 startOrRestart ecosystem.config.cjs --env production
   pm2 save
 
