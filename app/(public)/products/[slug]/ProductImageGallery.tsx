@@ -13,6 +13,7 @@ export default function ProductImageGallery({ images, productName }: { images: s
           src={activeImage}
           alt={productName}
           fill
+          sizes="(min-width: 1024px) 50vw, 100vw"
           className="object-cover transition-all duration-500"
           referrerPolicy="no-referrer"
         />
@@ -27,7 +28,7 @@ export default function ProductImageGallery({ images, productName }: { images: s
                 activeImage === img ? 'border-orange-500 opacity-100' : 'border-transparent opacity-60 hover:opacity-100'
               }`}
             >
-              <Image src={img} alt={`${productName} thumbnail ${i}`} fill className="object-cover" />
+              <Image src={img} alt={`${productName} thumbnail ${i}`} fill sizes="80px" className="object-cover" />
             </div>
           ))}
         </div>

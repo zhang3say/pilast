@@ -19,6 +19,7 @@ export default async function PublicLayout({ children }: { children: React.React
                     alt={settings.site_name || 'Pilast'} 
                     width={150} 
                     height={40} 
+                    sizes="150px"
                     className="object-contain h-10 w-auto" 
                   />
                 ) : (

@@ -31,6 +31,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
             src="/hero.png"
             alt="Pilates Equipment Range"
             fill
+            sizes="100vw"
             className="object-cover brightness-50"
             referrerPolicy="no-referrer"
             priority
@@ -121,6 +122,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
                           src={product.image_url || 'https://picsum.photos/seed/placeholder/400/300'}
                           alt={product.name}
                           fill
+                          sizes="(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw"
                           className="object-cover"
                           referrerPolicy="no-referrer"
                         />

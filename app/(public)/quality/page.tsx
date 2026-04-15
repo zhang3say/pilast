@@ -15,6 +15,7 @@ export default function QualityPage() {
             src="/hero-quality.jpg"
             alt="Quality Control"
             fill
+            sizes="100vw"
             className="object-cover brightness-50"
             referrerPolicy="no-referrer"
             priority

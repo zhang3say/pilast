@@ -31,7 +31,7 @@ export default async function AdminProducts() {
               <tr key={product.id}>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="h-12 w-16 relative rounded overflow-hidden">
-                    <Image src={product.image_url || 'https://picsum.photos/seed/placeholder/100/100'} alt={product.name} fill className="object-cover" referrerPolicy="no-referrer" />
+                    <Image src={product.image_url || 'https://picsum.photos/seed/placeholder/100/100'} alt={product.name} fill sizes="64px" className="object-cover" referrerPolicy="no-referrer" />
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">

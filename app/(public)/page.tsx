@@ -37,6 +37,7 @@ export default async function Home() {
             src="/hero.png"
             alt="Pilates Equipment"
             fill
+            sizes="100vw"
             className="object-cover brightness-50"
             referrerPolicy="no-referrer"
             priority
@@ -85,6 +86,7 @@ export default async function Home() {
                     src={product.image_url || 'https://picsum.photos/seed/placeholder/400/300'}
                     alt={product.name}
                     fill
+                    sizes="(min-width: 1024px) 25vw, (min-width: 768px) 50vw, 100vw"
                     className="object-cover"
                     referrerPolicy="no-referrer"
                   />

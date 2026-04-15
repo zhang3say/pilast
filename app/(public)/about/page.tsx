@@ -15,6 +15,7 @@ export default function AboutPage() {
             src="/hero-about.jpg"
             alt="About Us"
             fill
+            sizes="100vw"
             className="object-cover brightness-50"
             referrerPolicy="no-referrer"
             priority

@@ -15,6 +15,7 @@ export default function CustomServicePage() {
             src="/hero-custom.jpg"
             alt="Custom Service"
             fill
+            sizes="100vw"
             className="object-cover brightness-50"
             referrerPolicy="no-referrer"
             priority

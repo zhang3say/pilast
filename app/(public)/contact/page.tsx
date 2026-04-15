@@ -22,6 +22,7 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
             src="/hero-contact.jpg"
             alt="Contact Us"
             fill
+            sizes="100vw"
             className="object-cover brightness-50"
             referrerPolicy="no-referrer"
             priority

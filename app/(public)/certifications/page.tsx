@@ -15,6 +15,7 @@ export default function CertificationsPage() {
             src="/hero-cert.jpg"
             alt="Our Certifications"
             fill
+            sizes="100vw"
             className="object-cover brightness-50"
             referrerPolicy="no-referrer"
             priority
