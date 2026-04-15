@@ -52,7 +52,11 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     notFound();
   }
 
+  const settings = await getSettings();
+  const baseUrl = settings.seo_base_url || 'https://www.pilast.com';
+  const siteName = settings.site_name || 'Pilast';
   const images = product.images ? JSON.parse(product.images) : [product.image_url];
+  const description = product.seo_description || product.overview;
 
   const productJsonLd = {
     '@context': 'https://schema.org',

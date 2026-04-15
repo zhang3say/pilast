@@ -1,40 +1,47 @@
 import mysql from 'mysql2/promise';
 
-const pool = mysql.createPool({
+const connectionConfig = {
   host: process.env.MYSQL_HOST || '127.0.0.1',
   user: process.env.MYSQL_USER || 'pilastuser',
   password: process.env.MYSQL_PASSWORD || 'pilastpassword',
   database: process.env.MYSQL_DATABASE || 'pilast',
   port: process.env.MYSQL_PORT ? parseInt(process.env.MYSQL_PORT, 10) : 3306,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
-});
+};
 
-console.log('✅ Connected to MySQL via pool');
+async function withConnection<T>(run: (connection: any) => Promise<T>): Promise<T> {
+  const connection = await mysql.createConnection(connectionConfig);
+  try {
+    return await run(connection);
+  } finally {
+    await connection.end();
+  }
+}
 
 // Adapter to perfectly mimic better-sqlite3 standard queries asynchronously
 const db = {
-  exec: async (sql: string) => {
+  exec: async (sql: string) => withConnection(async (connection) => {
     const statements = sql.split(';').filter((s: string) => s.trim().length > 0);
     for (const s of statements) {
-      await pool.query(s);
+      await connection.query(s);
     }
-  },
+  }),
   prepare: (sql: string) => {
     return {
-      run: async (...params: any[]) => {
-        const [result] = await pool.query(sql, params) as any;
-        return { lastInsertRowid: result.insertId, changes: result.affectedRows };
-      },
-      get: async (...params: any[]) => {
-        const [rows] = await pool.query(sql, params) as any[];
-        return Array.isArray(rows) ? rows[0] : undefined; 
-      },
-      all: async (...params: any[]) => {
-        const [rows] = await pool.query(sql, params) as any[];
-        return Array.isArray(rows) ? rows : [];
-      }
+      run: async (...params: any[]) =>
+        withConnection(async (connection) => {
+          const [result] = await connection.query(sql, params) as any;
+          return { lastInsertRowid: result.insertId, changes: result.affectedRows };
+        }),
+      get: async (...params: any[]) =>
+        withConnection(async (connection) => {
+          const [rows] = await connection.query(sql, params) as any[];
+          return Array.isArray(rows) ? rows[0] : undefined;
+        }),
+      all: async (...params: any[]) =>
+        withConnection(async (connection) => {
+          const [rows] = await connection.query(sql, params) as any[];
+          return Array.isArray(rows) ? rows : [];
+        })
     };
   }
 };
