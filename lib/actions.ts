@@ -316,3 +316,53 @@ export async function getPaginatedProducts({
     totalItems: total
   };
 }
+
+export async function getAdminPaginatedProducts({
+  page = 1,
+  limit = 10,
+  search = '',
+  category = ''
+}: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  category?: string;
+}) {
+  const normalizedSearch = search.trim();
+  const normalizedCategory = category.trim();
+  let queryStr = 'SELECT * FROM products WHERE 1=1';
+  let countQueryStr = 'SELECT COUNT(*) as total FROM products WHERE 1=1';
+  const params: any[] = [];
+
+  if (normalizedSearch) {
+    queryStr += ' AND (name LIKE ? OR slug LIKE ? OR overview LIKE ?)';
+    countQueryStr += ' AND (name LIKE ? OR slug LIKE ? OR overview LIKE ?)';
+    const keyword = `%${normalizedSearch}%`;
+    params.push(keyword, keyword, keyword);
+  }
+
+  if (normalizedCategory) {
+    queryStr += ' AND category = ?';
+    countQueryStr += ' AND category = ?';
+    params.push(normalizedCategory);
+  }
+
+  const countResult = await db.prepare(countQueryStr).get(...params) as { total: number } | undefined;
+  const totalItems = countResult?.total || 0;
+  const totalPages = Math.max(1, Math.ceil(totalItems / limit));
+  const currentPage = Math.min(Math.max(1, page), totalPages);
+  const offset = (currentPage - 1) * limit;
+
+  queryStr += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+
+  const products = totalItems === 0
+    ? []
+    : await db.prepare(queryStr).all(...params, limit, offset) as any[];
+
+  return {
+    products,
+    totalPages,
+    currentPage,
+    totalItems
+  };
+}
