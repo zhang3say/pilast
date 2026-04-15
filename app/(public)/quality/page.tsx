@@ -12,7 +12,7 @@ export default function QualityPage() {
       <section className="relative h-[300px] md:h-[400px] flex items-center justify-center text-center mb-12">
         <div className="absolute inset-0 z-0">
           <Image
-            src="https://picsum.photos/seed/quality-pilates/1920/600"
+            src="/hero-quality.jpg"
             alt="Quality Control"
             fill
             className="object-cover brightness-50"

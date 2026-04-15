@@ -9,9 +9,11 @@ export default async function AdminProducts() {
     <div>
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900">产品管理</h1>
-        <Link href="/admin/products/new" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium">
-          添加新产品
-        </Link>
+        <div className="flex gap-4">
+          <Link href="/admin/products/new" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium shadow-md transition">
+            添加新产品
+          </Link>
+        </div>
       </div>
 
       <div className="bg-white rounded-lg shadow overflow-hidden">

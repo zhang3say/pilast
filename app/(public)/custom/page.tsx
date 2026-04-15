@@ -12,7 +12,7 @@ export default function CustomServicePage() {
       <section className="relative h-[300px] md:h-[400px] flex items-center justify-center text-center mb-12">
         <div className="absolute inset-0 z-0">
           <Image
-            src="https://picsum.photos/seed/custom-pilates/1920/600"
+            src="/hero-custom.jpg"
             alt="Custom Service"
             fill
             className="object-cover brightness-50"

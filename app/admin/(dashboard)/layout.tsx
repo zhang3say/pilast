@@ -17,6 +17,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <nav className="flex-1 p-4 space-y-2">
           <Link href="/admin" className="block px-4 py-2 rounded hover:bg-gray-800">仪表盘</Link>
           <Link href="/admin/products" className="block px-4 py-2 rounded hover:bg-gray-800">产品管理</Link>
+          <Link href="/admin/categories" className="block px-4 py-2 rounded hover:bg-gray-800">分类管理</Link>
+          <Link href="/admin/media" className="block px-4 py-2 rounded hover:bg-gray-800">媒体库</Link>
           <Link href="/admin/inquiries" className="block px-4 py-2 rounded hover:bg-gray-800">询盘记录</Link>
           <Link href="/admin/settings" className="block px-4 py-2 rounded hover:bg-gray-800">网站设置</Link>
         </nav>

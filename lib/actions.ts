@@ -3,7 +3,7 @@
 import db from './db';
 import { revalidatePath } from 'next/cache';
 import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
+import { join, basename } from 'path';
 import { existsSync } from 'fs';
 
 export async function getProducts() {
@@ -23,8 +23,8 @@ export async function getProductById(id: number) {
 
 export async function createProduct(data: any) {
   const stmt = db.prepare(`
-    INSERT INTO products (name, slug, category, overview, features, parameters, image_url)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO products (name, slug, category, overview, features, parameters, image_url, images, details_html)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
   const info = stmt.run(
     data.name,
@@ -33,7 +33,9 @@ export async function createProduct(data: any) {
     data.overview,
     data.features,
     data.parameters,
-    data.image_url
+    data.image_url || '',
+    data.images || '[]',
+    data.details_html || ''
   );
   revalidatePath('/admin/products');
   revalidatePath('/products');
@@ -43,7 +45,7 @@ export async function createProduct(data: any) {
 export async function updateProduct(id: number, data: any) {
   const stmt = db.prepare(`
     UPDATE products
-    SET name = ?, slug = ?, category = ?, overview = ?, features = ?, parameters = ?, image_url = ?
+    SET name = ?, slug = ?, category = ?, overview = ?, features = ?, parameters = ?, image_url = ?, images = ?, details_html = ?
     WHERE id = ?
   `);
   stmt.run(
@@ -53,12 +55,62 @@ export async function updateProduct(id: number, data: any) {
     data.overview,
     data.features,
     data.parameters,
-    data.image_url,
+    data.image_url || '',
+    data.images || '[]',
+    data.details_html || '',
     id
   );
   revalidatePath('/admin/products');
   revalidatePath('/products');
   revalidatePath(`/products/${data.slug}`);
+}
+
+export async function getMedia() {
+  const stmt = db.prepare('SELECT * FROM media ORDER BY created_at DESC');
+  return stmt.all() as any[];
+}
+
+export async function uploadMedia(formData: FormData) {
+  const file = formData.get('file') as File;
+  if (!file) return { success: false, error: 'No file' };
+
+  const bytes = await file.arrayBuffer();
+  const buffer = Buffer.from(bytes);
+
+  const uploadDir = join(process.cwd(), 'public', 'uploads');
+  if (!existsSync(uploadDir)) {
+    await mkdir(uploadDir, { recursive: true });
+  }
+
+  const filename = `${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
+  const filepath = join(uploadDir, filename);
+  await writeFile(filepath, buffer);
+
+  const url = `/uploads/${filename}`;
+  const stmt = db.prepare('INSERT INTO media (filename, url, type, size) VALUES (?, ?, ?, ?)');
+  stmt.run(filename, url, file.type, file.size);
+
+  revalidatePath('/admin/media');
+  return { success: true, url };
+}
+
+export async function deleteMedia(id: number, url: string) {
+  // Delete from DB
+  const stmt = db.prepare('DELETE FROM media WHERE id = ?');
+  stmt.run(id);
+
+  // Delete from FS
+  try {
+    const filepath = join(process.cwd(), 'public', url);
+    if (existsSync(filepath)) {
+      const { unlink } = require('fs/promises');
+      await unlink(filepath);
+    }
+  } catch (e) {
+    console.error('Failed to delete file from FS:', e);
+  }
+
+  revalidatePath('/admin/media');
 }
 
 export async function deleteProduct(id: number) {
@@ -156,9 +208,50 @@ export async function updateSettingsWithLogo(formData: FormData) {
 }
 
 export async function getCategories() {
-  const stmt = db.prepare("SELECT DISTINCT category FROM products WHERE category IS NOT NULL AND category != '' ORDER BY category ASC");
-  const rows = stmt.all() as { category: string }[];
-  return rows.map(r => r.category);
+  const stmt = db.prepare('SELECT name FROM categories ORDER BY name ASC');
+  const rows = stmt.all() as { name: string }[];
+  return rows.map(r => r.name);
+}
+
+export async function getAllCategories() {
+  const stmt = db.prepare('SELECT * FROM categories ORDER BY name ASC');
+  return stmt.all() as { id: number; name: string }[];
+}
+
+export async function createCategory(name: string, remarks: string = '') {
+  const stmt = db.prepare('INSERT INTO categories (name, remarks) VALUES (?, ?)');
+  try {
+    stmt.run(name, remarks);
+    revalidatePath('/admin/categories');
+    revalidatePath('/products');
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function deleteCategory(id: number) {
+  const stmt = db.prepare('DELETE FROM categories WHERE id = ?');
+  stmt.run(id);
+  revalidatePath('/admin/categories');
+  revalidatePath('/products');
+}
+
+export async function updateCategory(id: number, name: string, remarks: string = '') {
+  const stmt = db.prepare('UPDATE categories SET name = ?, remarks = ? WHERE id = ?');
+  try {
+    stmt.run(name, remarks, id);
+    revalidatePath('/admin/categories');
+    revalidatePath('/products');
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function getCategoryById(id: number) {
+  const stmt = db.prepare('SELECT * FROM categories WHERE id = ?');
+  return stmt.get(id) as { id: number; name: string; remarks: string };
 }
 
 export async function getPaginatedProducts({

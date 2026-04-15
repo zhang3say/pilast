@@ -12,7 +12,7 @@ export default function AboutPage() {
       <section className="relative h-[300px] md:h-[400px] flex items-center justify-center text-center mb-12">
         <div className="absolute inset-0 z-0">
           <Image
-            src="https://picsum.photos/seed/about-pilates/1920/600"
+            src="/hero-about.jpg"
             alt="About Us"
             fill
             className="object-cover brightness-50"

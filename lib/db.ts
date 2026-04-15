@@ -24,6 +24,17 @@ db.exec(`
     features TEXT,
     parameters TEXT,
     image_url TEXT,
+    images TEXT DEFAULT '[]',
+    details_html TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS media (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    filename TEXT NOT NULL,
+    url TEXT NOT NULL,
+    type TEXT,
+    size INTEGER,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
@@ -43,7 +54,32 @@ db.exec(`
     key TEXT PRIMARY KEY,
     value TEXT
   );
+
+  CREATE TABLE IF NOT EXISTS categories (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT UNIQUE NOT NULL,
+    remarks TEXT
+  );
 `);
+
+// Seed initial categories if empty
+const countCategories = db.prepare('SELECT COUNT(*) as count FROM categories').get() as { count: number };
+if (countCategories.count === 0) {
+  // Try to get categories from existing products if any
+  const existingProductCategories = db.prepare('SELECT DISTINCT category FROM products').all() as { category: string }[];
+  const insertCategory = db.prepare('INSERT INTO categories (name) VALUES (?)');
+  
+  if (existingProductCategories.length > 0) {
+    existingProductCategories.forEach(row => {
+      try { insertCategory.run(row.category); } catch (e) {}
+    });
+  } else {
+    // Default categories if nothing exists
+    ['Pilates Reformers', 'Cadillac Pilates Beds', 'Pilates Chairs', 'Ladder Barrels'].forEach(name => {
+      insertCategory.run(name);
+    });
+  }
+}
 
 // Seed initial settings if empty
 const countSettings = db.prepare('SELECT COUNT(*) as count FROM settings').get() as { count: number };
