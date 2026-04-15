@@ -1,4 +1,4 @@
-import { getProducts, deleteProduct } from '@/lib/actions';
+import { getProducts, deleteProduct, updateProductHotStatus } from '@/lib/actions';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -23,6 +23,7 @@ export default async function AdminProducts() {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">图片</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">产品名称</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">分类</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">首页热门</th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
             </tr>
           </thead>
@@ -43,6 +44,23 @@ export default async function AdminProducts() {
                     {product.category}
                   </span>
                 </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <form action={async () => {
+                    'use server';
+                    await updateProductHotStatus(product.id, !Boolean(product.is_hot));
+                  }}>
+                    <button
+                      type="submit"
+                      className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold transition ${
+                        product.is_hot
+                          ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      {product.is_hot ? '已设为热门' : '设为热门'}
+                    </button>
+                  </form>
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <Link href={`/admin/products/${product.id}`} className="text-indigo-600 hover:text-indigo-900 mr-4">编辑</Link>
                   <form action={async () => {
@@ -56,7 +74,7 @@ export default async function AdminProducts() {
             ))}
             {products.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-6 py-4 text-center text-gray-500">暂无产品</td>
+                <td colSpan={5} className="px-6 py-4 text-center text-gray-500">暂无产品</td>
               </tr>
             )}
           </tbody>

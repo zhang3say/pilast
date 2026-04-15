@@ -1,11 +1,10 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { getProducts, getSettings } from '@/lib/actions';
+import { getHotProducts, getSettings } from '@/lib/actions';
 
 export default async function Home() {
-  const products = await getProducts();
+  const hotProducts = await getHotProducts();
   const settings = await getSettings();
-  const hotProducts = products.slice(0, 4);
 
   const baseUrl = settings.seo_base_url || 'https://www.pilast.com';
   const logoUrl = settings.site_logo ? `${baseUrl}${settings.site_logo}` : `${baseUrl}/logo.png`;
@@ -75,39 +74,41 @@ export default async function Home() {
       </section>
 
       {/* Hot Products */}
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-10 text-center">Hot Products</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {hotProducts.map((product) => (
-              <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition duration-300">
-                <div className="relative h-48">
-                  <Image
-                    src={product.image_url || 'https://picsum.photos/seed/placeholder/400/300'}
-                    alt={product.name}
-                    fill
-                    sizes="(min-width: 1024px) 25vw, (min-width: 768px) 50vw, 100vw"
-                    className="object-cover"
-                    referrerPolicy="no-referrer"
-                  />
+      {hotProducts.length > 0 && (
+        <section className="py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-10 text-center">Hot Products</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {hotProducts.map((product) => (
+                <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition duration-300">
+                  <div className="relative h-48">
+                    <Image
+                      src={product.image_url || 'https://picsum.photos/seed/placeholder/400/300'}
+                      alt={product.name}
+                      fill
+                      sizes="(min-width: 1024px) 25vw, (min-width: 768px) 50vw, 100vw"
+                      className="object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
+                  <div className="p-6">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">{product.name}</h3>
+                    <p className="text-gray-600 mb-4 line-clamp-3">{product.overview}</p>
+                    <Link href={`/products/${product.slug}`} className="text-orange-600 font-semibold hover:text-orange-700">
+                      Learn More &rarr;
+                    </Link>
+                  </div>
                 </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">{product.name}</h3>
-                  <p className="text-gray-600 mb-4 line-clamp-3">{product.overview}</p>
-                  <Link href={`/products/${product.slug}`} className="text-orange-600 font-semibold hover:text-orange-700">
-                    Learn More &rarr;
-                  </Link>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
+            <div className="mt-10 text-center">
+              <Link href="/products" className="inline-block bg-gray-900 hover:bg-gray-800 text-white font-bold py-3 px-8 rounded-full transition duration-300">
+                View All Products
+              </Link>
+            </div>
           </div>
-          <div className="mt-10 text-center">
-            <Link href="/products" className="inline-block bg-gray-900 hover:bg-gray-800 text-white font-bold py-3 px-8 rounded-full transition duration-300">
-              View All Products
-            </Link>
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Why Choose Us */}
       <section className="py-16 bg-gray-50">

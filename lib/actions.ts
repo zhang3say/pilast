@@ -11,6 +11,11 @@ export async function getProducts() {
   return await stmt.all() as any[];
 }
 
+export async function getHotProducts() {
+  const stmt = db.prepare('SELECT * FROM products WHERE is_hot = 1 ORDER BY created_at DESC');
+  return await stmt.all() as any[];
+}
+
 export async function getProductBySlug(slug: string) {
   const stmt = db.prepare('SELECT * FROM products WHERE slug = ?');
   return await stmt.get(slug) as any;
@@ -122,6 +127,14 @@ export async function deleteProduct(id: number) {
   await stmt.run(id);
   revalidatePath('/admin/products');
   revalidatePath('/products');
+  revalidatePath('/');
+}
+
+export async function updateProductHotStatus(id: number, isHot: boolean) {
+  const stmt = db.prepare('UPDATE products SET is_hot = ? WHERE id = ?');
+  await stmt.run(isHot ? 1 : 0, id);
+  revalidatePath('/admin/products');
+  revalidatePath('/');
 }
 
 export async function submitInquiry(data: any) {

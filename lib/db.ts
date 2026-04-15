@@ -46,6 +46,26 @@ const db = {
   }
 };
 
+async function ensureColumnExists(tableName: string, columnName: string, definition: string) {
+  const existingColumn = await db.prepare(`
+    SELECT COUNT(*) AS count
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = ?
+      AND COLUMN_NAME = ?
+  `).get(tableName, columnName) as { count: number } | undefined;
+
+  if (!existingColumn || existingColumn.count === 0) {
+    try {
+      await db.exec(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${definition}`);
+    } catch (error: any) {
+      if (error?.code !== 'ER_DUP_FIELDNAME') {
+        throw error;
+      }
+    }
+  }
+}
+
 export async function initializeDb() {
   await db.exec(`
     CREATE TABLE IF NOT EXISTS products (
@@ -61,6 +81,7 @@ export async function initializeDb() {
       details_html TEXT,
       seo_keywords TEXT,
       seo_description TEXT,
+      is_hot TINYINT(1) NOT NULL DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
     CREATE TABLE IF NOT EXISTS media (
@@ -92,6 +113,8 @@ export async function initializeDb() {
       remarks TEXT
     );
   `);
+
+  await ensureColumnExists('products', 'is_hot', 'TINYINT(1) NOT NULL DEFAULT 0');
   
   // Try counting existing Settings
   const countSettingsList = await db.prepare('SELECT COUNT(*) as count FROM settings').all();
