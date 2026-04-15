@@ -11,6 +11,7 @@ export default async function CategoriesPage() {
         <h1 className="text-3xl font-bold text-gray-900">分类管理</h1>
         <Link 
           href="/admin/categories/new" 
+          prefetch={false}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition"
         >
           添加新分类
@@ -37,6 +38,7 @@ export default async function CategoriesPage() {
                   <div className="flex justify-end items-center gap-4">
                     <Link 
                       href={`/admin/categories/${cat.id}`} 
+                      prefetch={false}
                       className="text-indigo-600 hover:text-indigo-900 font-semibold"
                     >
                       编辑

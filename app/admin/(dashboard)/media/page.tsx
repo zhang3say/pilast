@@ -1,43 +1,89 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getMedia, uploadMedia, deleteMedia } from '@/lib/actions';
 import Image from 'next/image';
 
 export default function MediaLibrary() {
   const [mediaItems, setMediaItems] = useState<any[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [error, setError] = useState('');
+  const mountedRef = useRef(true);
 
   useEffect(() => {
+    mountedRef.current = true;
     fetchMedia();
+    return () => {
+      mountedRef.current = false;
+    };
   }, []);
 
   async function fetchMedia() {
-    const items = await getMedia();
-    setMediaItems(items);
+    try {
+      setError('');
+      const items = await getMedia();
+      if (mountedRef.current) {
+        setMediaItems(items);
+      }
+    } catch (err) {
+      console.error('Failed to load media library:', err);
+      if (mountedRef.current) {
+        setError('媒体库加载失败，请刷新后重试。');
+      }
+    }
   }
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || isUploading) return;
 
-    setIsUploading(true);
+    setError('');
+    if (mountedRef.current) {
+      setIsUploading(true);
+    }
     const formData = new FormData();
     formData.append('file', file);
 
-    const result = await uploadMedia(formData);
-    if (result.success) {
-      await fetchMedia();
-    } else {
-      alert('上传失败');
+    try {
+      const result = await uploadMedia(formData);
+      if (result.success) {
+        await fetchMedia();
+      } else if (mountedRef.current) {
+        setError('上传失败，请稍后重试。');
+      }
+    } catch (err) {
+      console.error('Failed to upload media:', err);
+      if (mountedRef.current) {
+        setError('上传失败，请稍后重试。');
+      }
+    } finally {
+      if (mountedRef.current) {
+        setIsUploading(false);
+      }
     }
-    setIsUploading(false);
   }
 
   async function handleDelete(id: number, url: string) {
+    if (deletingId !== null) return;
     if (confirm('确定要删除这个资源吗？这将无法撤回。')) {
-      await deleteMedia(id, url);
-      await fetchMedia();
+      setError('');
+      if (mountedRef.current) {
+        setDeletingId(id);
+      }
+      try {
+        await deleteMedia(id, url);
+        await fetchMedia();
+      } catch (err) {
+        console.error('Failed to delete media:', err);
+        if (mountedRef.current) {
+          setError('删除失败，请稍后重试。');
+        }
+      } finally {
+        if (mountedRef.current) {
+          setDeletingId(null);
+        }
+      }
     }
   }
 
@@ -51,6 +97,12 @@ export default function MediaLibrary() {
         </label>
       </div>
 
+      {error && (
+        <div className="mb-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
         {mediaItems.map((item) => (
           <div key={item.id} className="group relative bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden aspect-square">
@@ -63,6 +115,7 @@ export default function MediaLibrary() {
             <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
               <button 
                 onClick={() => handleDelete(item.id, item.url)}
+                disabled={deletingId === item.id}
                 className="bg-red-600 text-white p-2 rounded-full hover:bg-red-700 transition"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">

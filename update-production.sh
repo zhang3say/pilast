@@ -74,7 +74,7 @@ main() {
 
   log "Reloading PM2 process"
   ensure_pm2_uses_standalone
-  pm2 startOrRestart ecosystem.config.cjs --env production
+  pm2 startOrReload ecosystem.config.cjs --env production
   pm2 save
 
   log "Current PM2 status"

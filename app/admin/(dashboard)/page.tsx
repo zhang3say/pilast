@@ -14,7 +14,7 @@ export default async function AdminDashboard() {
           <h3 className="text-lg font-medium text-gray-500 mb-2">总产品数</h3>
           <p className="text-3xl font-bold text-gray-900">{products.length}</p>
           <div className="mt-4">
-            <Link href="/admin/products" className="text-blue-600 hover:underline">管理产品 &rarr;</Link>
+            <Link href="/admin/products" prefetch={false} className="text-blue-600 hover:underline">管理产品 &rarr;</Link>
           </div>
         </div>
         
@@ -22,7 +22,7 @@ export default async function AdminDashboard() {
           <h3 className="text-lg font-medium text-gray-500 mb-2">总询盘数</h3>
           <p className="text-3xl font-bold text-gray-900">{inquiries.length}</p>
           <div className="mt-4">
-            <Link href="/admin/inquiries" className="text-blue-600 hover:underline">查看询盘 &rarr;</Link>
+            <Link href="/admin/inquiries" prefetch={false} className="text-blue-600 hover:underline">查看询盘 &rarr;</Link>
           </div>
         </div>
       </div>

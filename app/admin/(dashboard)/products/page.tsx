@@ -10,7 +10,7 @@ export default async function AdminProducts() {
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900">产品管理</h1>
         <div className="flex gap-4">
-          <Link href="/admin/products/new" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium shadow-md transition">
+          <Link href="/admin/products/new" prefetch={false} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium shadow-md transition">
             添加新产品
           </Link>
         </div>
@@ -62,7 +62,7 @@ export default async function AdminProducts() {
                   </form>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <Link href={`/admin/products/${product.id}`} className="text-indigo-600 hover:text-indigo-900 mr-4">编辑</Link>
+                  <Link href={`/admin/products/${product.id}`} prefetch={false} className="text-indigo-600 hover:text-indigo-900 mr-4">编辑</Link>
                   <form action={async () => {
                     'use server';
                     await deleteProduct(product.id);
