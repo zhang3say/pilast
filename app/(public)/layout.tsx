@@ -61,7 +61,6 @@ export default async function PublicLayout({ children }: { children: React.React
               <li><Link href="/products" className="text-gray-400 hover:text-white">Products</Link></li>
               <li><Link href="/about" className="text-gray-400 hover:text-white">About Us</Link></li>
               <li><Link href="/contact" className="text-gray-400 hover:text-white">Contact Us</Link></li>
-              <li><Link href="/admin" className="text-gray-400 hover:text-white">Admin Login</Link></li>
             </ul>
           </div>
           <div>

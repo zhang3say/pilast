@@ -188,6 +188,10 @@ export async function updateSettingsWithLogo(formData: FormData) {
     whatsapp: formData.get('whatsapp') as string,
     email: formData.get('email') as string,
     address: formData.get('address') as string,
+    seo_base_url: formData.get('seo_base_url') as string,
+    seo_title_suffix: formData.get('seo_title_suffix') as string,
+    seo_keywords: formData.get('seo_keywords') as string,
+    seo_description: formData.get('seo_description') as string,
   };
 
   const logoFile = formData.get('site_logo_file') as File | null;
@@ -218,6 +222,9 @@ export async function updateSettingsWithLogo(formData: FormData) {
   
   revalidatePath('/admin/settings');
   revalidatePath('/', 'layout');
+  revalidatePath('/');
+  revalidatePath('/robots.txt');
+  revalidatePath('/sitemap.xml');
 }
 
 export async function getCategories() {
