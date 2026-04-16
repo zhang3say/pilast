@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { getSettings } from '@/lib/actions';
 import Logo from '@/components/Logo';
+import PublicMobileNav from '@/components/PublicMobileNav';
 import { readSetting } from '@/lib/site-settings';
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
@@ -10,12 +11,21 @@ export default async function PublicLayout({ children }: { children: React.React
   const email = readSetting(settings.email);
   const whatsapp = readSetting(settings.whatsapp);
   const address = readSetting(settings.address);
+  const navItems = [
+    { href: '/', label: 'Home' },
+    { href: '/products', label: 'Products' },
+    { href: '/about', label: 'About Us' },
+    { href: '/quality', label: 'Quality Control' },
+    { href: '/custom', label: 'Custom Service' },
+    { href: '/certifications', label: 'Certifications' },
+    { href: '/contact', label: 'Contact Us' },
+  ];
 
   return (
     <>
       <header className="bg-white shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
+          <div className="relative flex justify-between h-16 items-center">
             <div className="flex-shrink-0 flex items-center">
               <Link href="/" className="flex items-center gap-2">
                 {settings.site_logo ? (
@@ -40,14 +50,13 @@ export default async function PublicLayout({ children }: { children: React.React
               </Link>
             </div>
             <nav className="hidden md:flex space-x-8">
-              <Link href="/" className="text-gray-700 hover:text-orange-600 px-3 py-2 text-sm font-medium">Home</Link>
-              <Link href="/products" className="text-gray-700 hover:text-orange-600 px-3 py-2 text-sm font-medium">Products</Link>
-              <Link href="/about" className="text-gray-700 hover:text-orange-600 px-3 py-2 text-sm font-medium">About Us</Link>
-              <Link href="/quality" className="text-gray-700 hover:text-orange-600 px-3 py-2 text-sm font-medium">Quality Control</Link>
-              <Link href="/custom" className="text-gray-700 hover:text-orange-600 px-3 py-2 text-sm font-medium">Custom Service</Link>
-              <Link href="/certifications" className="text-gray-700 hover:text-orange-600 px-3 py-2 text-sm font-medium">Certifications</Link>
-              <Link href="/contact" className="text-gray-700 hover:text-orange-600 px-3 py-2 text-sm font-medium">Contact Us</Link>
+              {navItems.map((item) => (
+                <Link key={item.href} href={item.href} className="text-gray-700 hover:text-orange-600 px-3 py-2 text-sm font-medium">
+                  {item.label}
+                </Link>
+              ))}
             </nav>
+            <PublicMobileNav items={navItems} />
           </div>
         </div>
       </header>
